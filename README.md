@@ -39,6 +39,29 @@ python ui.py
   ]
   ```
 
+### Documented Schema & Alternate Field Aliases
+PricePulse normalizes input rules into internal canonical objects (`LevelRule` and `MACrossRule`). To accommodate common naming conventions without breaking canonical requirements, the parser supports explicitly documented field aliases:
+
+| Rule Type | Canonical Field | Supported Alias | Description & Constraint |
+| :--- | :--- | :--- | :--- |
+| `level` | `level` | `threshold` | Strictly positive numeric threshold (e.g. `1500` or `"1500.50"`). |
+| `ma_cross` | `short` | `short_window` | Positive integer window for the fast SMA. |
+| `ma_cross` | `long` | `long_window` | Positive integer window for the slow SMA (`short < long`). |
+
+**Alias Normalization Rules:**
+- **Single field used**: Either the canonical field or its alias is accepted and normalized to the canonical field name.
+- **Both fields present**: If both canonical and alias fields are provided (e.g. `{"level": 1500, "threshold": 1500}`), their values must be identical. If values conflict (e.g. `{"level": 1500, "threshold": 1600}`), a clear `ValidationError` is raised.
+- **Strict schema**: Arbitrary or unknown fields outside the documented schema are strictly rejected.
+- **Internal execution**: Internal alert evaluation and diagnostic explanations consistently use canonical names (`rule.level`, `rule.short`, `rule.long`).
+
+**Example with Alternate Aliases:**
+```json
+[
+  {"id": "r1", "instrument": "INFY", "type": "level", "direction": "below", "threshold": 1500},
+  {"id": "r2", "instrument": "TCS", "type": "ma_cross", "direction": "above", "short_window": 5, "long_window": 20}
+]
+```
+
 ## Crossing Semantics
 - **Level Crossing (`level`)**:
   - `below`: Previous close $\ge$ threshold and current close $<$ threshold.

@@ -165,24 +165,32 @@ class TestWebUI(unittest.TestCase):
                 f"Preset '{preset_name}' alert tuples did not match expected",
             )
 
-    def test_threshold_field_rejected(self):
-        """Regression test: Engine strictly rejects 'threshold' and requires 'level'."""
+    def test_threshold_alias_accepted(self):
+        """Regression test: Engine accepts documented alias 'threshold' and evaluates alert."""
         prices_csv = (
             "date,instrument,close\n"
             "2026-09-01,INFY,1520.50\n"
             "2026-09-02,INFY,1498.00\n"
         )
-        # Rule incorrectly using "threshold" instead of "level"
-        bad_rules_json = json.dumps([
-            {"id": "r1", "instrument": "INFY", "type": "level", "direction": "below", "threshold": 100}
+        rules_json = json.dumps([
+            {"id": "r1", "instrument": "INFY", "type": "level", "direction": "below", "threshold": 1500}
         ])
 
+        result = execute_analysis(prices_csv, rules_json)
+        self.assertTrue(result["success"])
+        self.assertEqual(len(result["alerts"]), 1)
+        self.assertEqual(result["alerts"][0]["rule_id"], "r1")
+        self.assertEqual(result["alerts"][0]["date"], "2026-09-02")
+
+    def test_unknown_field_rejected_in_ui(self):
+        """Regression test: Engine rejects unknown fields with clear ValidationError."""
+        prices_csv = "date,instrument,close\n2026-09-01,INFY,1520.50\n2026-09-02,INFY,1498.00\n"
+        bad_rules_json = json.dumps([
+            {"id": "r1", "instrument": "INFY", "type": "level", "direction": "below", "level": 1500, "unknown_field": "test"}
+        ])
         result = execute_analysis(prices_csv, bad_rules_json)
         self.assertFalse(result["success"])
-        self.assertEqual(
-            result["error"],
-            "Rule 'r1' of type 'level' is missing required field 'level'.",
-        )
+        self.assertIn("unknown field 'unknown_field'", result["error"])
 
     def test_ui_html_clears_stale_alert_count_on_error(self):
         """Regression test: HTML client code clears stale alert count badge on validation error."""

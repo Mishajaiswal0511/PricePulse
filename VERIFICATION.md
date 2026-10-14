@@ -154,3 +154,20 @@ In all failure scenarios, no Python tracebacks were leaked to stdout or stderr.
   - Rejection of malformed CSV/JSON with user-friendly error banners and no stack traces.
   - Automated tests in `tests/test_ui.py` covering HTML serving, `/api/health`, and `/api/analyze` request handling.
 
+---
+
+## 8. Schema Normalization & Alias Support Verification
+
+- **Documented Aliases**:
+  - `threshold` accepted for `level` (normalized to `level`).
+  - `short_window` accepted for `short` (normalized to `short`).
+  - `long_window` accepted for `long` (normalized to `long`).
+- **Conflict Handling**:
+  - Conflicting canonical and alias fields (e.g. `{"level": 1500, "threshold": 1600}`) raise a clean `ValidationError`.
+  - Identical values (e.g. `{"level": 1500, "threshold": 1500}`) succeed and normalize to canonical fields.
+- **Strict Schema**:
+  - Arbitrary or unknown fields (e.g. `{"extra": 123}`) are strictly rejected with a clear `ValidationError`.
+- **Test Suite Status**:
+  - Ran `python -m unittest discover tests -v`: **40 tests passing (0 failures, 0 errors)**.
+
+

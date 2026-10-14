@@ -87,8 +87,116 @@ def _validate_common_fields(rule_dict: Dict[str, Any], index: int) -> None:
         )
 
 
+def _normalize_level_dict(rule_dict: Dict[str, Any]) -> Dict[str, Any]:
+    """Normalize and validate fields for a 'level' rule.
+
+    Accepts canonical 'level' and documented alias 'threshold'.
+    Normalizes to 'level'. Rejects unknown fields and conflicting alias values.
+    """
+    rule_id = rule_dict.get("id", "unknown")
+    allowed_fields = {"id", "instrument", "type", "direction", "level", "threshold"}
+
+    # Reject unknown fields
+    for field in rule_dict:
+        if field not in allowed_fields:
+            raise ValidationError(
+                f"Rule '{rule_id}' of type 'level' contains unknown field '{field}'. "
+                f"Supported fields: 'id', 'instrument', 'type', 'direction', 'level' (or alias 'threshold')."
+            )
+
+    has_level = "level" in rule_dict
+    has_threshold = "threshold" in rule_dict
+
+    if has_level and has_threshold:
+        v_level = rule_dict["level"]
+        v_thresh = rule_dict["threshold"]
+
+        identical = False
+        if v_level == v_thresh:
+            identical = True
+        elif not isinstance(v_level, bool) and not isinstance(v_thresh, bool):
+            try:
+                identical = (Decimal(str(v_level).strip()) == Decimal(str(v_thresh).strip()))
+            except (InvalidOperation, ValueError, TypeError):
+                identical = False
+
+        if not identical:
+            raise ValidationError(
+                f"Rule '{rule_id}': Conflicting values provided for 'level' ({v_level}) "
+                f"and alias 'threshold' ({v_thresh})."
+            )
+
+        normalized = dict(rule_dict)
+        del normalized["threshold"]
+        return normalized
+
+    if has_threshold:
+        normalized = dict(rule_dict)
+        normalized["level"] = normalized.pop("threshold")
+        return normalized
+
+    return dict(rule_dict)
+
+
+def _normalize_ma_cross_dict(rule_dict: Dict[str, Any]) -> Dict[str, Any]:
+    """Normalize and validate fields for an 'ma_cross' rule.
+
+    Accepts canonical 'short' / 'long' and documented aliases 'short_window' / 'long_window'.
+    Normalizes to 'short' and 'long'. Rejects unknown fields and conflicting alias values.
+    """
+    rule_id = rule_dict.get("id", "unknown")
+    allowed_fields = {
+        "id", "instrument", "type", "direction",
+        "short", "long", "short_window", "long_window",
+    }
+
+    # Reject unknown fields
+    for field in rule_dict:
+        if field not in allowed_fields:
+            raise ValidationError(
+                f"Rule '{rule_id}' of type 'ma_cross' contains unknown field '{field}'. "
+                f"Supported fields: 'id', 'instrument', 'type', 'direction', "
+                f"'short' (or 'short_window'), 'long' (or 'long_window')."
+            )
+
+    normalized = dict(rule_dict)
+
+    # Check short / short_window
+    has_short = "short" in rule_dict
+    has_short_win = "short_window" in rule_dict
+    if has_short and has_short_win:
+        v_short = rule_dict["short"]
+        v_short_w = rule_dict["short_window"]
+        if v_short != v_short_w or type(v_short) is not type(v_short_w):
+            raise ValidationError(
+                f"Rule '{rule_id}': Conflicting values provided for 'short' ({v_short}) "
+                f"and alias 'short_window' ({v_short_w})."
+            )
+        del normalized["short_window"]
+    elif has_short_win:
+        normalized["short"] = normalized.pop("short_window")
+
+    # Check long / long_window
+    has_long = "long" in rule_dict
+    has_long_win = "long_window" in rule_dict
+    if has_long and has_long_win:
+        v_long = rule_dict["long"]
+        v_long_w = rule_dict["long_window"]
+        if v_long != v_long_w or type(v_long) is not type(v_long_w):
+            raise ValidationError(
+                f"Rule '{rule_id}': Conflicting values provided for 'long' ({v_long}) "
+                f"and alias 'long_window' ({v_long_w})."
+            )
+        del normalized["long_window"]
+    elif has_long_win:
+        normalized["long"] = normalized.pop("long_window")
+
+    return normalized
+
+
 def _parse_level_rule(rule_dict: Dict[str, Any]) -> LevelRule:
     """Parse and validate a 'level' rule."""
+    rule_dict = _normalize_level_dict(rule_dict)
     rule_id = rule_dict["id"]
     if "level" not in rule_dict:
         raise ValidationError(f"Rule '{rule_id}' of type 'level' is missing required field 'level'.")
@@ -121,6 +229,7 @@ def _parse_level_rule(rule_dict: Dict[str, Any]) -> LevelRule:
 
 def _parse_ma_cross_rule(rule_dict: Dict[str, Any]) -> MACrossRule:
     """Parse and validate an 'ma_cross' rule."""
+    rule_dict = _normalize_ma_cross_dict(rule_dict)
     rule_id = rule_dict["id"]
 
     for window in ("short", "long"):

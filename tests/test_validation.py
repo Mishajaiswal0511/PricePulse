@@ -208,6 +208,149 @@ class TestValidation(unittest.TestCase):
             load_rules(unsupported_dir)
         self.assertIn("unsupported direction 'UP'", str(ctx.exception))
 
+    def test_alternate_field_names_accepted(self):
+        """Documented alternate field names normalize cleanly to canonical schema."""
+        from decimal import Decimal
+        from price_alerts.rules import LevelRule, MACrossRule
+
+        rules_json = self._write_temp_file(
+            '['
+            '  {"id": "r1", "instrument": "INFY", "type": "level", "direction": "below", "threshold": 1500},'
+            '  {"id": "r2", "instrument": "TCS", "type": "ma_cross", "direction": "above", "short_window": 5, "long_window": 20}'
+            ']',
+            suffix=".json",
+        )
+        rules = load_rules(rules_json)
+        self.assertEqual(len(rules), 2)
+
+        # Rule 1 normalized to canonical LevelRule with .level
+        self.assertIsInstance(rules[0], LevelRule)
+        self.assertEqual(rules[0].id, "r1")
+        self.assertEqual(rules[0].level, Decimal("1500"))
+        self.assertTrue(hasattr(rules[0], "level"))
+        self.assertFalse(hasattr(rules[0], "threshold"))
+
+        # Rule 2 normalized to canonical MACrossRule with .short and .long
+        self.assertIsInstance(rules[1], MACrossRule)
+        self.assertEqual(rules[1].id, "r2")
+        self.assertEqual(rules[1].short, 5)
+        self.assertEqual(rules[1].long, 20)
+        self.assertTrue(hasattr(rules[1], "short"))
+        self.assertTrue(hasattr(rules[1], "long"))
+
+    def test_conflicting_aliases_rejected(self):
+        """Reject conflicting values between canonical fields and their aliases."""
+        # Level rule: level != threshold
+        conflicting_level = self._write_temp_file(
+            '[{"id": "r1", "instrument": "INFY", "type": "level", "direction": "below", "level": 1500, "threshold": 1600}]',
+            suffix=".json",
+        )
+        with self.assertRaises(ValidationError) as ctx:
+            load_rules(conflicting_level)
+        self.assertIn("Conflicting values provided for 'level'", str(ctx.exception))
+        self.assertIn("threshold", str(ctx.exception))
+
+        # MA rule: short != short_window
+        conflicting_short = self._write_temp_file(
+            '[{"id": "r2", "instrument": "TCS", "type": "ma_cross", "direction": "above", "short": 5, "short_window": 10, "long": 20}]',
+            suffix=".json",
+        )
+        with self.assertRaises(ValidationError) as ctx:
+            load_rules(conflicting_short)
+        self.assertIn("Conflicting values provided for 'short'", str(ctx.exception))
+
+        # MA rule: long != long_window
+        conflicting_long = self._write_temp_file(
+            '[{"id": "r3", "instrument": "TCS", "type": "ma_cross", "direction": "above", "short": 5, "long": 20, "long_window": 30}]',
+            suffix=".json",
+        )
+        with self.assertRaises(ValidationError) as ctx:
+            load_rules(conflicting_long)
+        self.assertIn("Conflicting values provided for 'long'", str(ctx.exception))
+
+    def test_identical_aliases_accepted(self):
+        """Accept identical values between canonical and alias fields without error."""
+        from decimal import Decimal
+
+        identical_rules = self._write_temp_file(
+            '['
+            '  {"id": "r1", "instrument": "INFY", "type": "level", "direction": "below", "level": 1500, "threshold": 1500.0},'
+            '  {"id": "r2", "instrument": "TCS", "type": "ma_cross", "direction": "above", "short": 5, "short_window": 5, "long": 20, "long_window": 20}'
+            ']',
+            suffix=".json",
+        )
+        rules = load_rules(identical_rules)
+        self.assertEqual(len(rules), 2)
+        self.assertEqual(rules[0].level, Decimal("1500"))
+        self.assertEqual(rules[1].short, 5)
+        self.assertEqual(rules[1].long, 20)
+
+    def test_unknown_fields_rejected(self):
+        """Strictly reject arbitrary unknown fields on rules."""
+        unknown_level = self._write_temp_file(
+            '[{"id": "r1", "instrument": "INFY", "type": "level", "direction": "below", "level": 1500, "extra_field": 123}]',
+            suffix=".json",
+        )
+        with self.assertRaises(ValidationError) as ctx:
+            load_rules(unknown_level)
+        self.assertIn("contains unknown field 'extra_field'", str(ctx.exception))
+
+        unknown_ma = self._write_temp_file(
+            '[{"id": "r2", "instrument": "TCS", "type": "ma_cross", "direction": "above", "short": 5, "long": 20, "window_type": "ema"}]',
+            suffix=".json",
+        )
+        with self.assertRaises(ValidationError) as ctx:
+            load_rules(unknown_ma)
+        self.assertIn("contains unknown field 'window_type'", str(ctx.exception))
+
+    def test_invalid_alias_values_rejected(self):
+        """Reject invalid values provided via alternate alias fields."""
+        # Non-numeric threshold
+        bad_thresh_text = self._write_temp_file(
+            '[{"id": "r1", "instrument": "INFY", "type": "level", "direction": "below", "threshold": "invalid"}]',
+            suffix=".json",
+        )
+        with self.assertRaises(ValidationError) as ctx:
+            load_rules(bad_thresh_text)
+        self.assertIn("Invalid numeric level", str(ctx.exception))
+
+        # Negative threshold
+        bad_thresh_neg = self._write_temp_file(
+            '[{"id": "r1", "instrument": "INFY", "type": "level", "direction": "below", "threshold": -100}]',
+            suffix=".json",
+        )
+        with self.assertRaises(ValidationError) as ctx:
+            load_rules(bad_thresh_neg)
+        self.assertIn("must be strictly positive", str(ctx.exception))
+
+        # Boolean threshold
+        bad_thresh_bool = self._write_temp_file(
+            '[{"id": "r1", "instrument": "INFY", "type": "level", "direction": "below", "threshold": true}]',
+            suffix=".json",
+        )
+        with self.assertRaises(ValidationError) as ctx:
+            load_rules(bad_thresh_bool)
+        self.assertIn("'level' cannot be a boolean", str(ctx.exception))
+
+        # Non-integer short_window
+        bad_short_float = self._write_temp_file(
+            '[{"id": "r2", "instrument": "TCS", "type": "ma_cross", "direction": "above", "short_window": 5.5, "long_window": 20}]',
+            suffix=".json",
+        )
+        with self.assertRaises(ValidationError) as ctx:
+            load_rules(bad_short_float)
+        self.assertIn("'short' window must be an integer", str(ctx.exception))
+
+        # short_window >= long_window
+        bad_window_order = self._write_temp_file(
+            '[{"id": "r2", "instrument": "TCS", "type": "ma_cross", "direction": "above", "short_window": 25, "long_window": 20}]',
+            suffix=".json",
+        )
+        with self.assertRaises(ValidationError) as ctx:
+            load_rules(bad_window_order)
+        self.assertIn("must be strictly less than", str(ctx.exception))
+
 
 if __name__ == "__main__":
     unittest.main()
+
