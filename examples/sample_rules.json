@@ -1,0 +1,31 @@
+[
+  {
+    "id": "alert_aapl_dip",
+    "instrument": "AAPL",
+    "type": "level",
+    "direction": "below",
+    "level": 200
+  },
+  {
+    "id": "alert_aapl_rally",
+    "instrument": "AAPL",
+    "type": "level",
+    "direction": "above",
+    "level": 205
+  },
+  {
+    "id": "alert_msft_cross",
+    "instrument": "MSFT",
+    "type": "ma_cross",
+    "short": 3,
+    "long": 6,
+    "direction": "below"
+  },
+  {
+    "id": "alert_googl_dip",
+    "instrument": "GOOGL",
+    "type": "level",
+    "direction": "below",
+    "level": 150
+  }
+]
