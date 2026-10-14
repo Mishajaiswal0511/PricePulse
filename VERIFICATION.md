@@ -139,3 +139,18 @@ In all failure scenarios, no Python tracebacks were leaked to stdout or stderr.
 - **Identified Limitations**:
   - The tool is designed for daily close price batches; high-frequency intra-day tick data with microsecond timestamps is outside the scope of `datetime.date`.
   - Memory consumption scales with the total number of historical price points loaded in a batch. For multi-gigabyte historical archives, chunked streaming or SQLite indexing would be recommended.
+
+---
+
+## 7. Optional Web Dashboard (`ui.py`) Verification
+
+- **Command**: `python ui.py --port 8000 --no-browser`
+- **Architecture**: Single-file Python `http.server` serving embedded responsive HTML/CSS/JS with zero `npm` and zero `pip` dependencies.
+- **Backend Integration**: Routes `/api/analyze` requests through existing `price_alerts.data_loader`, `price_alerts.rules`, and `price_alerts.engine` modules.
+- **Verified Capabilities**:
+  - Interactive preset fixture loading (Assessment Example, Multi-Asset Market, Boundary Case).
+  - Accurate calculation of alerts matching terminal output character-for-character.
+  - Interactive expand/collapse of diagnostic explanations showing predecessor vs. current prices and mathematical conditions.
+  - Rejection of malformed CSV/JSON with user-friendly error banners and no stack traces.
+  - Automated tests in `tests/test_ui.py` covering HTML serving, `/api/health`, and `/api/analyze` request handling.
+

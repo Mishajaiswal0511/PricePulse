@@ -6,7 +6,7 @@ A robust, dependency-free Python CLI alert engine that detects price level cross
 - **Python**: 3.9+ (Standard Library only; zero external packages required).
 - **Setup**: Clone or unzip into any directory. No virtual environment, API keys, or database required.
 
-## Quick Start
+## Quick Start (CLI)
 Run from the repository root:
 ```bash
 python alerts.py prices.csv rules.json
@@ -15,6 +15,13 @@ For diagnostic explanations showing previous/current values and thresholds:
 ```bash
 python alerts.py prices.csv rules.json --explain
 ```
+
+### Optional Local Web Dashboard
+For interactive live presentations:
+```bash
+python ui.py
+```
+*Opens `http://127.0.0.1:8000` in your browser. Uses Python's standard library with zero external dependencies.*
 
 ## Input Formats
 - **Prices CSV** (`date,instrument,close`):
