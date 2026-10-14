@@ -627,16 +627,128 @@ HTML_PAGE = """<!DOCTYPE html>
   <script>
     const PRESETS = {
       standard: {
-        csv: `date,instrument,close\\n2026-09-01,INFY,1520.50\\n2026-09-01,TCS,3890.00\\n2026-09-02,INFY,1534.10\\n2026-09-02,TCS,3902.25\\n2026-09-03,INFY,1498.00\\n2026-09-03,TCS,3910.00\\n2026-09-04,TCS,3910.00\\n2026-09-05,TCS,3910.00\\n2026-09-06,TCS,3910.00\\n2026-09-07,TCS,3910.00\\n2026-09-08,TCS,3910.00\\n2026-09-09,TCS,3910.00\\n2026-09-10,TCS,3910.00\\n2026-09-11,TCS,3910.00\\n2026-09-12,TCS,3910.00\\n2026-09-13,TCS,3910.00\\n2026-09-14,TCS,3910.00\\n2026-09-15,TCS,3910.00\\n2026-09-16,TCS,3890.00\\n2026-09-17,TCS,3890.00\\n2026-09-18,TCS,3890.00\\n2026-09-19,TCS,3890.00\\n2026-09-20,TCS,3890.00\\n2026-09-21,TCS,3890.00\\n2026-09-22,TCS,3890.00\\n2026-09-23,TCS,3890.00\\n2026-09-24,TCS,4050.00`,
-        json: `[\\n  {\\n    "id": "r1",\\n    "instrument": "INFY",\\n    "type": "level",\\n    "direction": "below",\\n    "level": 1500\\n  },\\n  {\\n    "id": "r2",\\n    "instrument": "TCS",\\n    "type": "ma_cross",\\n    "short": 5,\\n    "long": 20,\\n    "direction": "above"\\n  }\\n]`
+        csv: `date,instrument,close
+2026-09-01,INFY,1520.50
+2026-09-01,TCS,3890.00
+2026-09-02,INFY,1534.10
+2026-09-02,TCS,3902.25
+2026-09-03,INFY,1498.00
+2026-09-03,TCS,3910.00
+2026-09-04,TCS,3910.00
+2026-09-05,TCS,3910.00
+2026-09-06,TCS,3910.00
+2026-09-07,TCS,3910.00
+2026-09-08,TCS,3910.00
+2026-09-09,TCS,3910.00
+2026-09-10,TCS,3910.00
+2026-09-11,TCS,3910.00
+2026-09-12,TCS,3910.00
+2026-09-13,TCS,3910.00
+2026-09-14,TCS,3910.00
+2026-09-15,TCS,3910.00
+2026-09-16,TCS,3890.00
+2026-09-17,TCS,3890.00
+2026-09-18,TCS,3890.00
+2026-09-19,TCS,3890.00
+2026-09-20,TCS,3890.00
+2026-09-21,TCS,3890.00
+2026-09-22,TCS,3890.00
+2026-09-23,TCS,3890.00
+2026-09-24,TCS,4050.00`,
+        json: `[
+  {
+    "id": "r1",
+    "instrument": "INFY",
+    "type": "level",
+    "direction": "below",
+    "level": 1500
+  },
+  {
+    "id": "r2",
+    "instrument": "TCS",
+    "type": "ma_cross",
+    "short": 5,
+    "long": 20,
+    "direction": "above"
+  }
+]`
       },
       multi_asset: {
-        csv: `date,instrument,close\\n2026-10-03,AAPL,198.50\\n2026-10-01,GOOGL,175.00\\n2026-10-05,MSFT,400.00\\n2026-10-01,AAPL,202.00\\n2026-10-02,AAPL,201.00\\n2026-10-04,AAPL,197.00\\n2026-10-06,AAPL,206.50\\n2026-10-05,AAPL,204.00\\n2026-10-01,MSFT,400.00\\n2026-10-07,MSFT,370.00\\n2026-10-02,MSFT,400.00\\n2026-10-06,MSFT,400.00\\n2026-10-03,MSFT,400.00\\n2026-10-04,MSFT,400.00\\n2026-10-02,GOOGL,176.00\\n2026-10-07,GOOGL,179.00\\n2026-10-05,GOOGL,178.00\\n2026-10-03,GOOGL,174.50\\n2026-10-04,GOOGL,177.00\\n2026-10-06,GOOGL,176.50`,
-        json: `[\\n  {\\n    "id": "alert_aapl_dip",\\n    "instrument": "AAPL",\\n    "type": "level",\\n    "direction": "below",\\n    "level": 200\\n  },\\n  {\\n    "id": "alert_aapl_rally",\\n    "instrument": "AAPL",\\n    "type": "level",\\n    "direction": "above",\\n    "level": 205\\n  },\\n  {\\n    "id": "alert_msft_cross",\\n    "instrument": "MSFT",\\n    "type": "ma_cross",\\n    "short": 3,\\n    "long": 6,\\n    "direction": "below"\\n  },\\n  {\\n    "id": "alert_googl_dip",\\n    "instrument": "GOOGL",\\n    "type": "level",\\n    "direction": "below",\\n    "level": 150\\n  }\\n]`
+        csv: `date,instrument,close
+2026-10-03,AAPL,198.50
+2026-10-01,GOOGL,175.00
+2026-10-05,MSFT,400.00
+2026-10-01,AAPL,202.00
+2026-10-02,AAPL,201.00
+2026-10-04,AAPL,197.00
+2026-10-06,AAPL,206.50
+2026-10-05,AAPL,204.00
+2026-10-01,MSFT,400.00
+2026-10-07,MSFT,370.00
+2026-10-02,MSFT,400.00
+2026-10-06,MSFT,400.00
+2026-10-03,MSFT,400.00
+2026-10-04,MSFT,400.00
+2026-10-02,GOOGL,176.00
+2026-10-07,GOOGL,179.00
+2026-10-05,GOOGL,178.00
+2026-10-03,GOOGL,174.50
+2026-10-04,GOOGL,177.00
+2026-10-06,GOOGL,176.50`,
+        json: `[
+  {
+    "id": "alert_aapl_dip",
+    "instrument": "AAPL",
+    "type": "level",
+    "direction": "below",
+    "level": 200
+  },
+  {
+    "id": "alert_aapl_rally",
+    "instrument": "AAPL",
+    "type": "level",
+    "direction": "above",
+    "level": 205
+  },
+  {
+    "id": "alert_msft_cross",
+    "instrument": "MSFT",
+    "type": "ma_cross",
+    "short": 3,
+    "long": 6,
+    "direction": "below"
+  },
+  {
+    "id": "alert_googl_dip",
+    "instrument": "GOOGL",
+    "type": "level",
+    "direction": "below",
+    "level": 150
+  }
+]`
       },
       boundary: {
-        csv: `date,instrument,close\\n2026-09-01,INFY,1500.00\\n2026-09-02,INFY,1499.99\\n2026-09-03,INFY,1500.00\\n2026-09-04,INFY,1500.01`,
-        json: `[\\n  {\\n    "id": "exact_below",\\n    "instrument": "INFY",\\n    "type": "level",\\n    "direction": "below",\\n    "level": 1500\\n  },\\n  {\\n    "id": "exact_above",\\n    "instrument": "INFY",\\n    "type": "level",\\n    "direction": "above",\\n    "level": 1500\\n  }\\n]`
+        csv: `date,instrument,close
+2026-09-01,INFY,1500.00
+2026-09-02,INFY,1499.99
+2026-09-03,INFY,1500.00
+2026-09-04,INFY,1500.01`,
+        json: `[
+  {
+    "id": "exact_below",
+    "instrument": "INFY",
+    "type": "level",
+    "direction": "below",
+    "level": 1500
+  },
+  {
+    "id": "exact_above",
+    "instrument": "INFY",
+    "type": "level",
+    "direction": "above",
+    "level": 1500
+  }
+]`
       }
     };
 
