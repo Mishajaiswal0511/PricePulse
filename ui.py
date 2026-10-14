@@ -788,8 +788,24 @@ HTML_PAGE = """<!DOCTYPE html>
 
       if (!prices || !rules) {
         showError('Please supply both CSV prices and JSON alert rules.');
+        document.getElementById('alertsCountBadge').innerText = '0 alerts (error)';
+        document.getElementById('alertsCountBadge').style.color = 'var(--danger)';
+        document.getElementById('alertsTableBody').innerHTML = '';
+        document.getElementById('terminalOutput').innerText = '';
+        document.getElementById('statsBar').style.display = 'none';
+        document.getElementById('tableContainer').style.display = 'none';
+        document.getElementById('terminalCard').style.display = 'none';
+        document.getElementById('emptyState').style.display = 'block';
+        document.getElementById('emptyState').innerHTML = `
+          <div class="empty-icon">⚠️</div>
+          <p style="color: #fda4af; font-weight: 600;">Missing Input</p>
+          <p style="color: #94a3b8; font-size: 0.85rem; margin-top: 0.25rem;">Please supply both CSV prices and JSON alert rules.</p>
+        `;
         return;
       }
+
+      document.getElementById('alertsCountBadge').innerText = 'Evaluating...';
+      document.getElementById('alertsCountBadge').style.color = 'var(--text-muted)';
 
       try {
         const resp = await fetch('/api/analyze', {
@@ -801,13 +817,18 @@ HTML_PAGE = """<!DOCTYPE html>
 
         if (!data.success) {
           showError(data.error);
+          document.getElementById('alertsCountBadge').innerText = '0 alerts (validation error)';
+          document.getElementById('alertsCountBadge').style.color = 'var(--danger)';
+          document.getElementById('alertsTableBody').innerHTML = '';
+          document.getElementById('terminalOutput').innerText = '';
           document.getElementById('statsBar').style.display = 'none';
           document.getElementById('tableContainer').style.display = 'none';
           document.getElementById('terminalCard').style.display = 'none';
           document.getElementById('emptyState').style.display = 'block';
           document.getElementById('emptyState').innerHTML = `
             <div class="empty-icon">❌</div>
-            <p style="color: #fda4af;">Analysis could not be evaluated due to validation errors.</p>
+            <p style="color: #fda4af; font-weight: 600;">Validation Failed</p>
+            <p style="color: #94a3b8; font-size: 0.85rem; margin-top: 0.25rem;">0 alerts generated. Please correct the input errors above.</p>
           `;
           return;
         }
@@ -815,6 +836,19 @@ HTML_PAGE = """<!DOCTYPE html>
         renderResults(data);
       } catch (err) {
         showError('Failed to communicate with local PricePulse server: ' + err.message);
+        document.getElementById('alertsCountBadge').innerText = '0 alerts (server error)';
+        document.getElementById('alertsCountBadge').style.color = 'var(--danger)';
+        document.getElementById('alertsTableBody').innerHTML = '';
+        document.getElementById('terminalOutput').innerText = '';
+        document.getElementById('statsBar').style.display = 'none';
+        document.getElementById('tableContainer').style.display = 'none';
+        document.getElementById('terminalCard').style.display = 'none';
+        document.getElementById('emptyState').style.display = 'block';
+        document.getElementById('emptyState').innerHTML = `
+          <div class="empty-icon">❌</div>
+          <p style="color: #fda4af; font-weight: 600;">Server Error</p>
+          <p style="color: #94a3b8; font-size: 0.85rem; margin-top: 0.25rem;">Could not complete request: ${err.message}</p>
+        `;
       }
     }
 
@@ -830,6 +864,7 @@ HTML_PAGE = """<!DOCTYPE html>
       document.getElementById('statRules').innerText = stats.rules_evaluated;
 
       document.getElementById('alertsCountBadge').innerText = `${alerts.length} alert${alerts.length === 1 ? '' : 's'} triggered`;
+      document.getElementById('alertsCountBadge').style.color = 'var(--text-muted)';
 
       if (alerts.length === 0) {
         document.getElementById('tableContainer').style.display = 'none';
